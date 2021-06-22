@@ -1,0 +1,811 @@
+
+<!doctype html>
+<html>
+<head>
+	<title>Сканер Эльдокод</title>
+	<meta charset='utf-8'>
+	<link rel="stylesheet" media="all">
+	<script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
+</head>
+
+<style type="text/css">
+
+body {
+	margin-left:-1%;
+}
+
+#video {
+  width:100%;
+  height:100%;
+  margin: auto;
+  /*padding-top: 10%;*/
+}
+
+#photo {
+  width:100%;
+  height:100%;
+  display:none;
+  /*padding-top: 10%;*/
+}
+
+#canvas {
+  display:none;
+}
+
+.camera {
+  width: 100%;
+  /*padding-bottom: 10%;*/
+  margin: auto;
+  /*display:inline-block;*/
+  margin-left:1%;
+}
+
+.output {
+  width: 100%;
+  /*padding-bottom: 10%;*/
+  margin: auto;
+  /*display:inline-block;*/
+}
+
+#startbutton {
+	display: block;
+    position: relative;
+    margin: auto;
+    bottom: 182px;
+    width: 128px;
+    height: 128px;
+    background-color: rgba(118,188,33, 0.5);
+    border: 1px solid rgba(118,188,33);
+}
+
+.camera_border {
+	background-color: rgba(0,0,0, 0.5);
+    border: 1px solid rgba(118,188,33);
+    position: absolute;
+    display: none;
+}
+
+.contentarea {
+  font-size: 16px;
+  font-family: "Lucida Grande", "Arial", sans-serif;
+  width: 96%;
+  display: none;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 192px;
+}
+
+
+/*блок с задачами*/
+.todoist{
+  	font-family: "Lucida Grande", "Arial", sans-serif;
+  	width: 96%;
+  	display: block;
+  	margin-left: auto;
+  	margin-right: auto;
+  	margin-top: 160px;
+
+}
+
+.todoist_task{
+	width: 100%;
+  	margin: auto;
+  	border: 2px solid rgba(118,188,33);
+  	margin-top: 32px;
+  	font-size: 24px;
+  	padding: 8px;
+}
+
+.todoist_task:first-child {
+	margin-top: 192px;
+}
+
+.todoist img{
+	display: block;
+  	height:100%;
+  	margin: auto;
+  	margin-top: 8px;
+
+}
+
+.todoist_task div {
+	background-color: rgba(118,188,33);
+	color: white;
+	font-family: "Arial";
+	margin-top: 8px;
+	text-align:left;
+	padding: 8px;
+}
+
+/*блоr со списком лидеров*/
+.leader_board{
+  	font-family: "Lucida Grande", "Arial", sans-serif;
+  	width: 96%;
+  	margin-left: auto;
+  	margin-right: auto;
+  	margin-top: 160px;
+  	display:none;
+}
+
+
+.leader{
+	width: 100%;
+  	margin: auto;
+  	border: 2px solid rgba(118,188,33);
+  	margin-top: 32px;
+  	font-size: 24px;
+  	padding: 8px;
+}
+
+.leader_board img{
+	display: block;
+  	height:100%;
+  	margin: auto;
+  	margin-top: 8px;
+  	font-size: 24px;
+  	padding: 8px;
+
+}
+
+.leader div {
+	background-color: rgba(118,188,33);
+	color: white;
+	font-family: "Arial";
+	margin-top: 8px;
+	text-align:left;
+	padding: 8px;
+}
+
+.leader:first-child {
+	border: 2px solid rgba(207,7,52);
+	margin-top: 192px;
+}
+
+.leader:first-child div {
+	background-color: rgba(207,7,52);
+}
+
+/*значки*/
+.iconify {
+	width: 128px; 
+	height: 128px;
+	left: auto;
+	position: absolute;
+	right: 32px;
+	top: 32px;
+	color: rgba(118,188,33);
+	z-index: 1;
+}
+
+#icon_leader{
+	right:auto;
+	left:32px;
+	display:block;
+}
+
+#icon_leader_off{
+	right:auto;
+	left:32px;
+	display:none;
+}
+
+#iconify_off {
+	display: none;
+}
+
+#iconify_on {
+	display: block;
+}
+
+.header {
+	position: absolute;
+	font-size: 64px;
+	font-family: "Arial";
+	top: 64px;
+	width:100%;
+	text-align: center;
+	color: rgba(207,7,52);
+	font-weight: 750;
+}
+
+#headerTask {
+	display:block;
+}
+
+#headerScaner {
+	display:none;
+}
+
+#headerLeaders {
+	display:none;
+}
+
+
+
+</style>
+
+<body>
+
+<span class="iconify" id="icon_leader_off" data-icon="fa-regular:window-close" data-inline="false" onclick="change_leaderBoard_status(cnt = 0)"></span>
+<span class="iconify" id="icon_leader" data-icon="ic:twotone-leaderboard" data-inline="false" onclick="change_leaderBoard_status(cnt = 1)"></span>
+
+<span class="iconify" data-icon="mdi-camera-off" data-inline="false" id="iconify_off" onclick="change_camera_status(cnt = 0)"></span>
+<span class="iconify" data-icon="mdi:camera" data-inline="false" id="iconify_on" onclick="change_camera_status(cnt = 1)"></span>
+
+<!-- заголовки -->
+<div class="header" id="headerTask">Список задач</div>
+<div class="header" id="headerScaner">Сканер</div>
+<div class="header" id="headerLeaders">Таблица лидеров</div>
+
+<!-- Страница с камерой -->
+<div class="contentarea" id="contentarea"> 
+  <div class="camera">
+    <video id="video">Video stream not available.</video>
+    <div class="camera_border"></div>
+  </div>
+
+  <button id="startbutton"></button> 
+
+  <canvas id="canvas">
+  </canvas>
+
+  <div class="output">
+    <img id="photo" alt="The screen capture will appear in this box."> 
+  </div>
+
+</div>
+
+<!-- Страница со списком задач -->
+<div class="todoist" id="todoist">
+  {% for task in tasks%}
+  <div class="todoist_task">
+    <img src = "{{task.image_src}}">
+    <div class="todoist_task_type">{{task.tasktype}}</div>
+    <div class="todoist_task_name">{{task.name}}</div>
+    <div class="todoist_task_group_name">{{task.group_name}}</div>
+    <div class="todoist_task_time">{{task.task_dt}}</div>
+   <div>
+  {% endfor %}
+
+
+</div>
+
+<div class="leader_board" id="leader_board">
+  {% for leader in leaders%}
+
+  {% if forloop.first%}
+<div class="leader" id="leader_user">
+  {% else %}
+<div class="leader">
+  {%endif%} 
+
+    <img src="{{leader.img}}">
+    <div>Ваше место: {{leader.place}}</div>
+
+    {% if leader.user_flg == 0 %}
+    <div>{{leader.name}}</div>
+    {% endif %}
+
+    <div>Ваше количество сканирований: {{leader.scan_cnt}}</div>
+    </div>
+
+  {% endfor %}
+</div>
+
+</body>
+
+<script type="text/javascript">
+	(function() {
+  // The width and height of the captured photo. We will set the
+  // width to the value defined here, but the height will be
+  // calculated based on the aspect ratio of the input stream.
+
+  //var width = 320;    // We will scale the photo width to this 
+  //var height = 0;     // This will be computed based on the input stream
+
+  // |streaming| indicates whether or not we're currently streaming
+  // video from the camera. Obviously, we start at false.
+
+  var streaming = false;
+
+  // The various HTML elements we need to configure or control. These
+  // will be set by the startup() function.
+
+  var video = null;
+  var canvas = null;
+  var photo = null;
+  var startbutton = null;
+
+  function startup() {
+    video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+    photo = document.getElementById('photo');
+    startbutton = document.getElementById('startbutton');
+    
+    navigator.mediaDevices.getUserMedia({audio: false, video: {
+    															facingMode: 'environment'
+    														}
+    									})
+    .then(function(stream) {
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch(function(err) {
+      console.log("An error occurred: " + err);
+    });
+
+    video.addEventListener('canplay', function(ev){
+      if (!streaming) {
+        //height = video.videoHeight / (video.videoWidth/width); 
+        height = video.videoHeight;
+        width = video.videoWidth;
+        camera_border_width = window.innerWidth*0.96;
+        camera_border_hight = camera_border_width/14*10;
+        camera_border_margin = 192+camera_border_hight/4;
+
+      
+        // Firefox currently has a bug where the height can't be read from
+        // the video, so we will make assumptions if this happens
+      
+        video.setAttribute('width', width);
+        video.setAttribute('height', height);
+        canvas.setAttribute('width', width);
+        canvas.setAttribute('height', height);
+
+        document.querySelectorAll('.camera_border')[0].style.width = camera_border_width + "px";
+        document.querySelectorAll('.camera_border')[0].style.top = camera_border_margin + "px";
+        document.querySelectorAll('.camera_border')[0].style.height = camera_border_hight + "px";
+        document.querySelectorAll('.camera_border')[0].style.display = "block";
+        
+        //document.querySelectorAll('.camera_border')[0].style.left = height + "px";
+
+
+        streaming = true;
+      }
+    }, false);
+
+    startbutton.addEventListener('click', function(ev){
+      takepicture();
+      ev.preventDefault();
+    }, false);
+    
+    clearphoto();
+  }
+
+  // Fill the photo with an indication that none has been
+  // captured.
+
+  function clearphoto() {
+    var context = canvas.getContext('2d');
+    context.fillStyle = "#AAA";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    var data = canvas.toDataURL('image/png', 1.0);
+    photo.setAttribute('src', data);
+  }
+  
+  // Capture a photo by fetching the current contents of the video
+  // and drawing it into a canvas, then converting that to a PNG
+  // format data URL. By drawing it on an offscreen canvas and then
+  // drawing that to the screen, we can change its size and/or apply
+  // other changes before drawing it.
+
+  function takepicture() {
+    var context = canvas.getContext('2d');
+    if (width && height) {
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(video, 0, 0, width, height);      
+
+
+      var data = canvas.toDataURL('image/png', 1.0);
+
+      // посылаем картинку на обработку
+      var xhttp = new XMLHttpRequest();
+
+      xhttp.onreadystatechange = function() {
+      if (xhttp.readyState == XMLHttpRequest.DONE) {
+          showTasks(xhttp.response),
+          showLeaders(xhttp.response),
+          checkStatus(xhttp.response)
+        }
+      }
+
+      xhttp.open("POST",'makemagic');
+      xhttp.send(data)
+
+      photo.setAttribute('src', data);
+    } else {
+      clearphoto();
+    }
+  }
+
+  // Set up our event listener to run the startup process
+  // once loading is complete.
+  window.addEventListener('load', startup, false);
+
+})();
+
+/*<div class="header" id="headerTask">Список задач</div>
+<div class="header" id="headerScaner">Сканер</div>
+<div class="header" id="headerLeaders">Таблица лидеров</div>*/
+
+  function change_camera_status() {	
+  	//
+  	var headerTask = document.getElementById('headerTask')
+  	var headerScaner = document.getElementById('headerScaner')
+  	var headerLeaders = document.getElementById('headerLeaders')
+  	//
+  	var contentarea = document.getElementById('contentarea')
+  	var iconify_off = document.getElementById('iconify_off')
+  	var todoist = document.getElementById('todoist')
+  	var iconify_on = document.getElementById('iconify_on')
+  	var icon_leader = document.getElementById('icon_leader')
+
+	cnt++
+	if (cnt%2 == 0) {
+		contentarea.style.display = "block";
+		iconify_off.style.display = "block";
+		icon_leader.style.display = "none";
+		todoist.style.display = "none";
+		iconify_on.style.display = "none";
+		//
+		headerTask.style.display = "none";
+		headerScaner.style.display = "block";
+		headerLeaders.style.display = "none";
+		//
+	} else {
+		contentarea.style.display = "none";
+		iconify_off.style.display = "none";
+		icon_leader.style.display = "block";
+		todoist.style.display = "block";
+		iconify_on.style.display = "block";
+		//
+		headerTask.style.display = "block";
+		headerScaner.style.display = "none";
+		headerLeaders.style.display = "none";
+		//
+	}
+};
+
+function change_leaderBoard_status() {	
+	//
+  	var headerTask = document.getElementById('headerTask')
+  	var headerScaner = document.getElementById('headerScaner')
+  	var headerLeaders = document.getElementById('headerLeaders')
+  	//
+  	var todoist = document.getElementById('todoist')
+  	var icon_leader_off = document.getElementById('icon_leader_off')
+  	var leader_board = document.getElementById('leader_board')
+  	var icon_leader = document.getElementById('iconify_on')
+  	var icon_leader = document.getElementById('icon_leader')
+  	var iconify_on = document.getElementById('iconify_on')
+
+	cnt++
+	if (cnt%2 == 0) {
+		todoist.style.display = "none";
+		icon_leader_off.style.display = "block";
+		icon_leader.style.display = "none";
+		leader_board.style.display = "block";
+		icon_leader.style.display = "none";
+		iconify_on.style.display = "none"
+		//
+		headerTask.style.display = "none";
+		headerScaner.style.display = "none";
+		headerLeaders.style.display = "block";
+		//
+	} else {
+		todoist.style.display = "block";
+		icon_leader_off.style.display = "none";
+		icon_leader.style.display = "block";
+		leader_board.style.display = "none";
+		icon_leader.style.display = "block";
+		iconify_on.style.display = "block"
+		//
+		headerTask.style.display = "block";
+		headerScaner.style.display = "none";
+		headerLeaders.style.display = "none";
+		//
+	}
+};
+
+//получение JSON от сервера
+// вместро hello пишем, к чему обращаемся
+/*    fetch('/hello')
+        .then(function (response) {
+            // But parse it as JSON this time
+            return response.json();
+        })
+        .then(function (json) {
+            // Do anything with it!
+            console.log('GET response as JSON:');
+            console.log(json);
+        })
+*/
+
+// или вот так / попробовать сослаться на https://eldoscaner.site/test.json
+/*var requestURL = 'https://eldoscaner.site/test.json';
+
+var request = new XMLHttpRequest();
+
+request.open('GET', requestURL); 
+
+//только, если получаем json
+request.responseType = 'json';
+request.send();
+*/
+
+
+
+//создаем задачи, обращаясь к серверу.
+
+/*//запуск функции после загрузки JSON
+request.onload = function() {
+  var tasks = request.response; //
+  showTasks(tasks);
+}*/
+
+
+// window.addEventListener('load', showTasks( 
+// {
+//   "tasks" : [
+//     {
+//       "img_src" : "img/tv.webp",
+//       "tasktype" : "Выставить товар",
+//       "name" : "Ultra HD (4K) LED телевизор 50 Витязь 50LU1204 Smart",
+//       "task_dt" : "21.06.2021"     
+//     },
+//      {
+//       "img_src" : "img/headphones.webp",
+//       "tasktype" : "Заменить ценник",
+//       "name" : "Беспроводные наушники с микрофоном Apple AirPods (2019) (MV7N2RUA)",
+//       "task_dt" : "19.06.2021"     
+//       }
+//     ],
+//     "leaders" : [
+//     {
+//       "user_flg" : 0,
+//       "place" : 1,
+//       "name" : "Первый Вася Пупкин",
+//       "scan_cnt" : 12,
+//       "img" : "img/tv.webp"     
+//     },
+//      {
+//       "user_flg" : 1,
+//       "place" : 2,
+//       "name" : "Второй Вася Пупкин",
+//       "scan_cnt" : 12,
+//       "img" : "img/tv.webp"     
+//       },
+//      {
+//       "user_flg" : 0,
+//       "place" : 3,
+//       "name" : "Третий Вася Пупкин",
+//       "scan_cnt" : 12,
+//       "img" : "img/tv.webp"     
+//       }
+//     ],
+//     "status" : "ok"
+//   }
+
+//   ),
+//   showLeaders( 
+// {
+//   "tasks" : [
+//     {
+//       "img_src" : "img/tv.webp",
+//       "tasktype" : "Выставить товар",
+//       "name" : "Ultra HD (4K) LED телевизор 50 Витязь 50LU1204 Smart",
+//       "task_dt" : "21.06.2021"     
+//     },
+//      {
+//       "img_src" : "img/headphones.webp",
+//       "tasktype" : "Заменить ценник",
+//       "name" : "Беспроводные наушники с микрофоном Apple AirPods (2019) (MV7N2RUA)",
+//       "task_dt" : "19.06.2021"     
+//       }
+//     ],
+//     "leaders" : [
+//     {
+//       "user_flg" : 0,
+//       "place" : 1,
+//       "name" : "Первый Вася Пупкин",
+//       "scan_cnt" : 12,
+//       "img" : "img/tv.webp"     
+//     },
+//      {
+//       "user_flg" : 1,
+//       "place" : 2,
+//       "name" : "Второй Вася Пупкин",
+//       "scan_cnt" : 12,
+//       "img" : "img/tv.webp"     
+//       },
+//      {
+//       "user_flg" : 0,
+//       "place" : 3,
+//       "name" : "Третий Вася Пупкин",
+//       "scan_cnt" : 12,
+//       "img" : "img/tv.webp"     
+//       }
+//     ],
+//     "status" : "ok"
+//   }
+
+//   ), false);
+
+
+function showTasks(jsonObj) {
+  //удаляем div
+  document.querySelectorAll('.todoist_task').forEach(e => e.remove());
+
+// формируем задачи
+  console.log(jsonObj)
+  jsonObj1 = JSON.parse(jsonObj)
+  var tasks = jsonObj1['tasks'];
+  console.log(tasks)
+  var todoist = document.getElementById('todoist')
+
+  for (var i = 0; i < tasks.length; i++) {
+
+  	var task = document.createElement('div');
+  	todoist.appendChild(task);
+  	task.classList.add("todoist_task");
+
+    var task_img = document.createElement('img'); //создаем картинку
+    task_img.src = tasks[i].img_src; //наполняем
+    task.appendChild(task_img); //засовываем в task
+
+    var task_type = document.createElement('div');
+    task_type.textContent = tasks[i].tasktype;
+    task.appendChild(task_type);
+
+    var task_name = document.createElement('div');
+    task_name.textContent = tasks[i].name;
+    task.appendChild(task_name);
+
+    var task_time = document.createElement('div');
+    task_time.textContent = tasks[i].task_dt;
+    task.appendChild(task_time);
+  }
+};
+
+
+function showLeaders(jsonObj) {
+ //удаляем div
+ document.querySelectorAll('.leader').forEach(e => e.remove());
+
+jsonObj1 = JSON.parse(jsonObj)
+// формируем лидеров
+var leaders = jsonObj1['leaders'];
+var leader_board = document.getElementById('leader_board')
+
+//юзер
+  for (var i = 0; i < leaders.length; i++) {
+  	if (leaders[i].user_flg==1) 
+  	{
+  	var leader = document.createElement('div');
+  	leader_board.appendChild(leader);
+  	leader.classList.add("leader");
+
+    var leader_img = document.createElement('img'); //создаем картинку
+    leader_img.src = leaders[i].img; //наполняем
+    leader.appendChild(leader_img); //засовываем в task
+
+    var leader_type = document.createElement('div');
+    leader_type.textContent = leaders[i].place;
+    leader.appendChild(leader_type);
+
+    var leader_name = document.createElement('div');
+    leader_name.textContent = leaders[i].name;
+    leader.appendChild(leader_name);
+
+    var leader_cnt = document.createElement('div');
+    leader_cnt.textContent = leaders[i].scan_cnt;
+    leader.appendChild(leader_cnt);  
+    }  else {
+    	console.log("Не юзер")
+    }
+  }	
+
+//список
+  for (var i = 0; i < leaders.length; i++) {
+
+  	var leader = document.createElement('div');
+  	leader_board.appendChild(leader);
+  	leader.classList.add("leader");
+
+    var leader_img = document.createElement('img'); //создаем картинку
+    leader_img.src = leaders[i].img; //наполняем
+    leader.appendChild(leader_img); //засовываем в task
+
+    var leader_type = document.createElement('div');
+    leader_type.textContent = leaders[i].place;
+    leader.appendChild(leader_type);
+
+    var leader_name = document.createElement('div');
+    leader_name.textContent = leaders[i].name;
+    leader.appendChild(leader_name);
+
+    var leader_cnt = document.createElement('div');
+    leader_cnt.textContent = leaders[i].scan_cnt;
+    leader.appendChild(leader_cnt);
+  }
+}
+
+//функция отображения статуса
+function checkStatus(jsonObj) {
+  var json_test = `{
+  "tasks" : [
+    {
+      "img_src" : "img/tv.webp",
+      "tasktype" : "Выставить товар",
+      "name" : "Ultra HD (4K) LED телевизор 50 Витязь 50LU1204 Smart",
+      "task_dt" : "21.06.2021"     
+    },
+     {
+      "img_src" : "img/headphones.webp",
+      "tasktype" : "Заменить ценник",
+      "name" : "Беспроводные наушники с микрофоном Apple AirPods (2019) (MV7N2RUA)",
+      "task_dt" : "19.06.2021"     
+      }
+    ],
+    "leaders" : [
+    {
+      "user_flg" : 0,
+      "place" : 1,
+      "name" : "Первый Вася Пупкин",
+      "scan_cnt" : 12,
+      "img" : "img/tv.webp"     
+    },
+     {
+      "user_flg" : 1,
+      "place" : 2,
+      "name" : "Второй Вася Пупкин",
+      "scan_cnt" : 12,
+      "img" : "img/tv.webp"     
+      },
+     {
+      "user_flg" : 0,
+      "place" : 3,
+      "name" : "Третий Вася Пупкин",
+      "scan_cnt" : 12,
+      "img" : "img/tv.webp"     
+      }
+    ],
+    "status" : "ok"
+  }`
+  var obj = JSON.parse(jsonObj)
+  button = document.getElementById('#startbutton')
+  border = document.getElementsByClassName('camera_border')
+
+  if (obj.status === 'ok') {
+    
+    button.style.borderColor = rgba(118,188,33)
+    button.style.backgroundColor = rgba(118,188,33)
+    border.backgroundColor = rgba(118,188,33)
+  
+  } else if (obj.status === 'not ok') {
+
+    button.style.borderColor = rgba(207,7,52,0.5)
+    button.style.backgroundColor = rgba(207,7,52,0.5)
+    border.backgroundColor = rgba(207,7,52,0.5)
+    setTimeout(colorBack(), 1000)
+  
+  } else if (obj.status === 'bad image') {
+
+    alert('Фото не обработано :(')
+  }
+
+  
+}
+
+function colorBack() {
+  button = document.getElementById('#startbutton')
+    button.style.borderColor = rgba(118,188,33,0.5)
+    button.style.backgroundColor = rgba(0,0,0,0.5)
+}
+
+</script>
+</html>
+
+
