@@ -13,10 +13,11 @@ class Scanaction(models.Model):
 
 
 class Sku(models.Model):
-	sku = models.IntegerField(blank=True, null=True)
+	sku = models.IntegerField(primary_key=True)
 	name = models.TextField(blank=True, null=True)
-	img_src = models.TextField(blank=True, null=True)
+	img_src = models.ImageField(upload_to='sku')
 	group_name = models.TextField(blank=True, null=True)
+	price = models.IntegerField(blank=True, null=True)
 
 	class Meta:
 		managed = False

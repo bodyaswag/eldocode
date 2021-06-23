@@ -4,12 +4,8 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 
 from django.template import loader
-# from django.db import models
 
 from pricetagapp.models import *
-
-#from .models import Skanaction
-#from .models import Tasks
 
 import logging
 import requests
@@ -17,7 +13,7 @@ import json
 import base64
 from pyzbar.pyzbar import decode
 from io import BytesIO
-from PIL import Image
+from PIL import Image,ImageFilter
 import base64
 from pathlib import Path
 
@@ -26,6 +22,8 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+def login(request):
+    return render(request, "login.html")
 def index(request):
 
     tasks = Actualtask.objects.all()
@@ -37,16 +35,16 @@ def makemagic(request):
 
     #получаем картинку
     imgurl = request.body
-    
+
 
     #получаем цену с ценника
-    ocr_price = ocr_space_file(filename='recievedIMG.png', imgurl=imgurl, language='rus')
-    #ocr_price = 101
+    ocr_price = ocr_space_file(filename='recievedIMG.png', imgurl=imgurl)
+    
 
     print('ocr price:',ocr_price)
 
     #получаем ид товара с ценника
-    ocr_sku = getcodevalue(imgurl,'EAN13')
+    ocr_sku = getcodevalue('recievedIMG_orig.png','QRCODE')
     #ocr_sku = 1
 
     print('ocr_sku:',ocr_sku)
@@ -85,67 +83,69 @@ def makemagic(request):
     t = list(Actualtask.objects.all().values())
     l = list(Leaderboard.objects.all().values())
     print(t)
+    print(l)
 
     return JsonResponse({'status':status,'tasks':t,'leaders':l})
 
 def getcodevalue(imgurl,codetype):
-    img_data = imgurl.decode('utf-8').replace('data:image/png;base64,', '')
-
     
-    im = Image.open(BytesIO(base64.decodebytes(img_data.encode())))
-    im.save(fp=r'recievedIMG_codecode.png')
+
+    im = Image.open(imgurl)
 
     d = decode(im)
-
+    s=''
     print('ocrid:',d)
 
     for dd in d:
         if dd.type == codetype:
-            return dd.data.decode('utf-8')
+            s = dd.data.decode('utf-8')
         else:
             pass
 
+    if 'eldorado' in s:
+        return s.partition('detail/')[2].partition('/')[0]
+    else:
+        return None
+
 
 def getactualprice(ocr_sku):
-    return 100
+    s = Sku.objects.get(sku=ocr_sku)
+    return s.price
 
-def ocr_space_file(filename, imgurl, overlay=False, api_key='b3d764d35e88957', language='rus'):
-    CORRECT_PRICE = 66500
+def ocr_space_file(filename, imgurl, overlay=False, api_key='b3d764d35e88957'):
+    
     
     crop_image(imgurl=imgurl)
 
+    OCREngine = 2
     payload = {'isOverlayRequired': overlay,
                'apikey': api_key,
-               'language': language,
+               # 'language': language,
+               'OCREngine':OCREngine,
                }
     with open(filename, 'rb') as f:
         r = requests.post('https://api.ocr.space/parse/image',
                           files={filename: f},
                           data=payload,
+
                           )
 
-        #d = r.json()
-        #a = d['ParsedResults'][0]['ParsedText']
+    d = r.json()
+    a = d['ParsedResults'][0]['ParsedText']
 
-        #print('rp parsed text:',a)
+    print('ParsedText:',a)
 
-        result = r.content.decode()
-        res_array = json.loads(json.dumps(result))
+    b = a.split('\n')
 
-        print(res_array)
-
-        actual_price = int(res_array.split(',')[5].replace('"ParsedText":"', '').replace(' ', ''))
-
-        print('CORRECT PRICE =', CORRECT_PRICE, '\n', 'ACTUAL PRICE =', actual_price)
-        if actual_price == CORRECT_PRICE:
-            print('----------------------Все четко:)----------------------')
+    for bb in b:
+        bb = bb.replace(' ','')
+        print(bb,bb.isnumeric())
+        if bb.isnumeric():
+            price = int(bb)
+            return price
         else:
-            print('----------------------Надо менять!----------------------')
-
-        if actual_price:
-            return actual_price
-        else:
-            return None
+            price = None
+    return price
 
 
 def crop_image(imgurl):
@@ -154,15 +154,8 @@ def crop_image(imgurl):
 
     im = Image.open(BytesIO(base64.decodebytes(img_data.encode())))
 
-    width, height = im.size
-
-    # Setting the points for cropped image
-    left = 190
-    top = height / 1.6
-    right = 500
-    bottom = 1.6 * height / 2
-
-    image_cropped = im.crop((left, top, right, bottom))
+    im.save(fp=r'recievedIMG_orig.png')
+    image_cropped = im.filter(ImageFilter.BoxBlur(3))
 
     image_cropped.save(fp=r'recievedIMG.png')
 
